@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Dashboard</title>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h2 {
+            margin-bottom: 15px;
+        }
+        .filters {
+            margin-bottom: 20px;
+        }
+        select, input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>KPI Dashboard</h2>
+
+    <div class="filters">
+        <input type="text" id="searchInput" placeholder="Search...">
+        <select id="departmentFilter">
+            <option value="">All Departments</option>
+        </select>
+        <select id="monthFilter">
+            <option value="">All Months</option>
+        </select>
+    </div>
+
+    <table id="kpiTable" class="display">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th>KPI %</th>
+                <th>Month</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- jQuery + DataTables + PapaParse -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <script>
+        const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3IlwvKyhvnxzGlG_o4CZTNcS0mlWz8IeMVizvfintXNt8Oq9CvkwHXqLdGUNVd1obnd58URcRtz3w/pub?output=csv";
+
+        let table;
+
+        function loadDashboardData() {
+            Papa.parse(sheetUrl, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    const data = results.data;
+
+                    // Fill dropdown filters
+                    fillFilters(data);
+
+                    // Insert rows into table
+                    let rows = [];
+                    data.forEach(row => {
+                        if (row.Name && row.Department) {
+                            rows.push([
+                                row.Name,
+                                row.Department,
+                                row.Role,
+                                row["KPI %"],
+                                row.Month
+                            ]);
+                        }
+                    });
+
+                    table = $('#kpiTable').DataTable({
+                        data: rows,
+                        pageLength: 25
+                    });
+
+                    // Search box
+                    $('#searchInput').on('keyup', function () {
+                        table.search(this.value).draw();
+                    });
+
+                    // Department filter
+                    $('#departmentFilter').on('change', function () {
+                        table.column(1).search(this.value).draw();
+                    });
+
+                    // Month filter
+                    $('#monthFilter').on('change', function () {
+                        table.column(4).search(this.value).draw();
+                    });
+                }
+            });
+        }
+
+        function fillFilters(data) {
+            let departments = new Set();
+            let months = new Set();
+
+            data.forEach(d => {
+                if (d.Department) departments.add(d.Department);
+                if (d.Month) months.add(d.Month);
+            });
+
+            departments.forEach(dep => {
+                $('#departmentFilter').append(`<option value="${dep}">${dep}</option>`);
+            });
+
+            months.forEach(m => {
+                $('#monthFilter').append(`<option value="${m}">${m}</option>`);
+            });
+        }
+
+        loadDashboardData();
+    </script>
+
+</body>
+</html>
