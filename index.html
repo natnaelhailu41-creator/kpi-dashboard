@@ -16,6 +16,7 @@
         }
         h2 {
             margin-bottom: 15px;
+            text-transform: uppercase;
         }
         .filters {
             margin-bottom: 20px;
@@ -34,12 +35,15 @@
 </head>
 <body>
 
-    <h2>KPI Dashboard</h2>
+    <h2>KPI DASHBOARD</h2>
 
     <div class="filters">
         <input type="text" id="searchInput" placeholder="Search...">
         <select id="departmentFilter">
             <option value="">All Departments</option>
+        </select>
+        <select id="roleFilter">
+            <option value="">All Roles</option>
         </select>
         <select id="monthFilter">
             <option value="">All Months</option>
@@ -108,6 +112,11 @@
                         table.column(1).search(this.value).draw();
                     });
 
+                    // Role filter
+                    $('#roleFilter').on('change', function () {
+                        table.column(2).search(this.value).draw();
+                    });
+
                     // Month filter
                     $('#monthFilter').on('change', function () {
                         table.column(4).search(this.value).draw();
@@ -118,15 +127,21 @@
 
         function fillFilters(data) {
             let departments = new Set();
+            let roles = new Set();
             let months = new Set();
 
             data.forEach(d => {
                 if (d.Department) departments.add(d.Department);
+                if (d.Role) roles.add(d.Role);
                 if (d.Month) months.add(d.Month);
             });
 
             departments.forEach(dep => {
                 $('#departmentFilter').append(`<option value="${dep}">${dep}</option>`);
+            });
+
+            roles.forEach(r => {
+                $('#roleFilter').append(`<option value="${r}">${r}</option>`);
             });
 
             months.forEach(m => {
